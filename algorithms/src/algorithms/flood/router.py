@@ -21,7 +21,7 @@ class Router(ABCRouter):
         super().__init__()
         self.clocks = {}
 
-    def on_recv(self, trx: Transceiver, time: int, msg):
+    def on_recv(self, trx: Transceiver, msg):
         header, data = msg
         clock_id, clock, topic = header
         # check for stale message

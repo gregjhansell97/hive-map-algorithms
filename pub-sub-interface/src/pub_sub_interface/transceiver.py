@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 
 
 class Transceiver(ABC):
@@ -15,6 +15,13 @@ class Transceiver(ABC):
         # callbacks have arguments (transceiver, data) in that order
         self._callbacks = []  # list of callbacks that get invoked on recv
 
+    @abstractproperty
+    def time(self):
+        """
+        Current time check by the transceiver
+        """
+        raise NotImplementedError
+
     @abstractmethod
     def transmit(self, data):
         """
@@ -26,17 +33,16 @@ class Transceiver(ABC):
         """
         raise NotImplementedError
 
-    def receive(self, time, data):
+    def receive(self, data):
         """
         Invoked by child class to deliver messages received to transceiver. Acts 
         as the original event driver
 
         Args:
-            time: time that message was received
             data: raw bytes del
         """
         for cb in self._callbacks:
-            cb(self, time, data)
+            cb(self, data)
 
     def _subscribe(self, cb):
         """

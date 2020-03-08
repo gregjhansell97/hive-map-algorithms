@@ -30,7 +30,7 @@ class Router(ABC):
         self.trxs.append(trx)
 
     @abstractmethod
-    def on_recv(self, trx: Transceiver, time:int, msg):
+    def on_recv(self, trx: Transceiver, msg):
         """
         Receives bytes of data at a certain time (this is the callback)
 

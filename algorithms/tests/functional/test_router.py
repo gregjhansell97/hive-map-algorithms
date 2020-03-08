@@ -9,7 +9,7 @@ in the system tests
 from collections import defaultdict
 import pytest
 
-from pub_sub_interface.trxs import LocalTransceiver
+from tests.transceivers import LocalTransceiver
 
 
 def test_initialization(algorithm):

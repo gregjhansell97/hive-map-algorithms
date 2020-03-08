@@ -21,7 +21,7 @@ class Subscriber(ABCSubscriber):
         super().__init__(topic, cb)
         self.clocks = {}
 
-    def on_recv(self, trx: Transceiver, time: int, msg):
+    def on_recv(self, trx: Transceiver, msg):
         header, data = msg
         clock_id, clock, topic = header
         # not the right topic, subscriber doesn't care about it 

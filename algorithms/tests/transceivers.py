@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Transceivers and helper classes used for testing algorithms
+"""
+
 from pub_sub_interface.transceiver import Transceiver
 
 
 class LocalTransceiver(Transceiver):
     """
-    Interacts with other transceivers on the same thread and process. 
+    Interacts with other transceivers on the same thread. 
     LocalTransceiver is not thread-safe and is intended for testing purposes: 
     spoofing up interactions between subscribers, publishers, and routers. The
     connections are a chain of method invocations; this makes the class ideal
@@ -49,6 +53,10 @@ class LocalTransceiver(Transceiver):
                     t_i._connect(t_j)
         return connections
 
+    @property
+    def time(self):
+        return 0
+
     def _connect(self, connection: Transceiver):
         """
         Connects one local transceiver to another. The connection is one-way.
@@ -58,13 +66,12 @@ class LocalTransceiver(Transceiver):
         """
         self.connections.append(connection)
 
-    def transmit(self, data: bytes):
+    def transmit(self, data):
         """
         Iterates through all connections and invokes their receive methods
 
         Args:
-            data: bytes that connections will receive
+            data: data that connections will receive
         """
         for t in self.connections:
-            # None for time because it doesn't matter for flooding
-            t.receive(None, data)
+            t.receive(data)

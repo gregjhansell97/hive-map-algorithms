@@ -7,13 +7,3 @@
     Read more about conftest.py under:
     https://pytest.org/latest/plugins.html
 """
-
-from pub_sub_interface.trxs import LocalTransceiver
-
-def pytest_generate_tests(metafunc):
-    """
-    Customize test functions however needed
-    """
-    if "Transceiver" in metafunc.fixturenames:
-        # parameterized transceivers
-        metafunc.parametrize("Transceiver", [LocalTransceiver])

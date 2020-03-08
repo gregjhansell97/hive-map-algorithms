@@ -8,7 +8,7 @@ Unit tests for Publisher
 from collections import defaultdict
 import pytest
 
-from pub_sub_interface.trxs import LocalTransceiver
+from tests.transceivers import LocalTransceiver
 
 def test_initialization(algorithm):
     """
@@ -48,7 +48,7 @@ def test_publish_no_transceiver(algorithm):
     """
     Publisher, Subscriber, Router = algorithm
     p = Publisher(5)
-    p.publish(b"hello world")
+    p.publish("hello world")
 
 
 def test_publish_one_local_transceiver(algorithm):
@@ -59,7 +59,7 @@ def test_publish_one_local_transceiver(algorithm):
     p = Publisher(5)
     t = LocalTransceiver()
     p.use(t)
-    p.publish(b"hello world")
+    p.publish("hello world")
 
 
 def test_publish_many_transceivers(algorithm):
@@ -71,7 +71,7 @@ def test_publish_many_transceivers(algorithm):
     ts = [LocalTransceiver() for _ in range(10)]
     for t in ts:
         p.use(t)
-    p.publish(b"goodbye yellow brick road")
+    p.publish("goodbye yellow brick road")
 
 
 def test_many_publish_many_transceivers(algorithm):
@@ -84,4 +84,4 @@ def test_many_publish_many_transceivers(algorithm):
     for t in ts:
         p.use(t)
     for i in range(10):
-        p.publish(b"goodbye yellow brick road")
+        p.publish("goodbye yellow brick road")

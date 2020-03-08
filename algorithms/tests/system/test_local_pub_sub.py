@@ -9,7 +9,7 @@ between subscribers and publishers
 import pytest
 
 from tests.functional.test_subscriber import get_callback
-from pub_sub_interface.trxs import LocalTransceiver
+from tests.transceivers import LocalTransceiver
 
 
 def test_one_pub_one_sub_one_local_connection(algorithm):

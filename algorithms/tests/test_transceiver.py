@@ -18,10 +18,10 @@ def get_callback():
         arguments
     """
 
-    def cb(trx, time, data):
+    def cb(trx, data):
         # callbacks for transceivers expects a transceiver instance, a time,
         # and data
-        cb.log.append((trx, time, data))
+        cb.log.append((trx, data))
 
     cb.log = []  # log tracks the data received and by which transceiver
     return cb
@@ -56,7 +56,7 @@ def test_publish_subscribe_2_socket_network(Transceiver):
     for i in range(p_count):
         connections[0].transmit("hello world")
     #TODO for future tranceivers, will have to wait with a timeout
-    assert cb.log == [(connections[1], None, "hello world")] * 10
+    assert cb.log == [(connections[1], "hello world")] * 10
 
 
 def test_publish_subscribe_multiple_socket_network(Transceiver):
@@ -79,13 +79,13 @@ def test_publish_subscribe_multiple_socket_network(Transceiver):
     for c, cb in zip(connections, callbacks):
         if c == connections[1]:
             assert cb.log == []
-            cb.log.append((c, None, "hello world"))  # consistent throughout now
+            cb.log.append((c, "hello world"))  # consistent throughout now
         # useful for checking stuff later
-        assert cb.log == [(c, None, "hello world")]
+        assert cb.log == [(c, "hello world")]
 
     connections[5].transmit("lucky 5")
     for c, cb in zip(connections, callbacks):
         if c == connections[5]:
-            assert cb.log == [(c, None, "hello world")]
-            cb.log.append((c, None, "lucky 5"))
-        assert cb.log == [(c, None, "hello world"), (c, None, "lucky 5")]
+            assert cb.log == [(c, "hello world")]
+            cb.log.append((c, "lucky 5"))
+        assert cb.log == [(c, "hello world"), (c, "lucky 5")]
