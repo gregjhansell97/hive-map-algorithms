@@ -8,8 +8,9 @@ Unit tests for LocalSocket; the main target of these tests is AbstractSocket
 from collections import defaultdict
 from multiprocessing import Queue
 import pytest
+import time
 
-from ..transceivers import QTransceiver, distance
+from ..transceivers import IPCTransceiver, IPCBroker
 
 
 def get_callback():
@@ -29,92 +30,81 @@ def get_callback():
     cb.log = []  # log tracks the data received and by which transceiver
     return cb
 
-def get_transceiver(loc, radius):
-    transmit_q = Queue()
-    receive_q = Queue()
-    t = QTransceiver(loc, radius, transmit_q, receive_q)
+def test_ipc_initialization_start_stop():
+    """
+    Ensures that ipc queue can start and stop without crashing or hanging
+    """
+    # checks the broker
+    b = IPCBroker("ipc_initialization")
+    # checks transceiver
+    t = IPCTransceiver(b.channel, context=b.context)
+
+    # starts them both up
     t.start()
-    return transmit_q, receive_q, t
-
-def test_get_distance():
-    """
-    Verifies distance function calculates correct euclidian distance
-    """
-    assert distance((0, 0), (3, 4)) == 5
-    assert distance((-1, -3), (2, 1)) == 5
-
-def test_initialization_start_stop():
-    """
-    Ensures that Q transceivers can be started and stopped without crashing
-    """
-    transmit_q, receive_q, t = get_transceiver((0, 0), 10)
+    b.start()
+    # kill them both
     t.stop()
-
+    b.stop()
 
 def test_subscribe():
     """
     Ensures that subscribe method works as expected
     """
-    transmit_q, receive_q, t = get_transceiver((0, 0), 10)
-    t._subscribe(get_callback())
+    t = IPCTransceiver("test_subscriber")
+    t.start()
+    cb = get_callback()
+    t._subscribe(cb)
     t.stop()
 
 def test_transmit():
     """
     Verifies transmit method works as expected
     """
-    transmit_q, receive_q, t = get_transceiver((0, 0), 10)
-
-    t.transmit("hello world")
-    loc, r, data = transmit_q.get()
-    assert loc == (0, 0)
-    assert r == 10
-    assert data == "hello world"
+    t = IPCTransceiver("test_transmit")
+    t.start()
+    t.transmit("one small step for man")
     t.stop()
 
-def test_receive_transmission():
-    """
-    Behaves as expected when message is added to receive q
-    """
-    transmit_q, receive_q, t = get_transceiver((0, 0), 10)
-    cb = get_callback()
-    t._subscribe(cb)
+def test_two_transceivers_communicate():
+    b = IPCBroker("test_two_transceivers_communicate")
+    t_1 = IPCTransceiver(b.channel, context=b.context)
+    t_2 = IPCTransceiver(b.channel, context=b.context)
+    # track callbacks
+    cb_1 = get_callback()
+    t_1._subscribe(cb_1)
+    cb_2 = get_callback()
+    t_2._subscribe(cb_2)
 
+    # start components
+    t_1.start()
+    t_2.start()
+    b.start()
+    # slow joiners syndrom!!!
+    time.sleep(0.2)
+    t_1.transmit("one small step for man")
+    t_2.transmit("one large leap for gerg")
+    time.sleep(0.2) # wait for stuff to happen
 
-    t.transmit("fingers crossed")
-    receive_q.put(transmit_q.get())
-    t.stop()
-    assert cb.log == [(t, "fingers crossed")]
+    t_1.stop()
+    t_2.stop()
+    b.stop()
+
+    print(cb_1.log)
+    print(cb_2.log)
+
+    assert cb_1.log == [(t_1, "one large leap for gerg")]
+    assert cb_2.log == [(t_2, "one small step for man")]
+
 
 def test_receive_just_in_range_transmission():
     """
     Transmission message that was out of range
     """
-    transmit_q_1, _, t_1 = get_transceiver((0, 0), 5)
-    _, receive_q_2, t_2 = get_transceiver((3, 3.99), 1)
-
-    cb = get_callback()
-    t_2._subscribe(cb)
-
-    t_1.transmit("hey")
-    receive_q_2.put(transmit_q_1.get())
-    t_1.stop()
-    t_2.stop()
-    assert cb.log == [(t_2, "hey")]
+    pass
     
 def test_receive_out_of_range_transmission():
     """
     Transmission message that was out of range
     """
-    transmit_q_1, _, t_1 = get_transceiver((0, 0), 10)
-    _, receive_q_2, t_2 = get_transceiver((20, 20), 10)
-
-    cb = get_callback()
-    t_2._subscribe(cb)
-
-    t_1.transmit("hey")
-    receive_q_2.put(transmit_q_1.get())
-    t_1.stop()
-    t_2.stop()
-    assert cb.log == []
+    pass
     

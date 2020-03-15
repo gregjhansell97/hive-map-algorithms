@@ -60,6 +60,7 @@ class Transceiver(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def transmit(self, data):
         """
         Bytes of data to send to all other reachable transceivers in the 

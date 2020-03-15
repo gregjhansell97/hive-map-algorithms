@@ -1,0 +1,21 @@
+
+--------------------------------------------------------------------------------
+3/15/2020 - Killington, VT - Meta-level
+
+I want to log more information and thoughts via keyboard rather than notebook.
+To that end, this log file will track all of these ideas/problems/issues that
+I confront while making hive-map. Expect the format here with a data, location
+and topic put in the header
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+3/15/2020 - Killington, VT - IPC
+
+I wanted to get a transceivers to communicate over processes. I was planning on
+using multiprocessing queues provided, but I want some added flexibility of
+creating and removing more queues on the fly. It seems that these
+multiprocessing qs must be created before processes are forked. I created a zmq
+model where publishers push to a broker and then the broker publishes the
+information to subscribers. I'm worried about he slow joiner problem but
+optimistic that over ipc this isn't as much as a problem (as over tcp...)
+--------------------------------------------------------------------------------
