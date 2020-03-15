@@ -4,10 +4,16 @@
 Entry point for benchmarks
 """
 
+from multiprocessing import Process, Queue
 import uuid
 
-def spawn_master_node():
-    pass
+def spawn_master_node(incoming_q, outgoing_qs):
+    while True:
+        msg = incoming_q.get()
+        if msg == None:
+            break
+        for q in outgoing_qs:
+            q.put(msg)
 
 def spawn_router():
     pass
@@ -24,6 +30,10 @@ if __name__ == "__main__":
     # spawn master node that handles broadcast and receive aspect of queues
     
     # create queues
+    transmit_q = Queue()
+    receive_qs = [Queue() for _ in range(3)]
+
+    master = Process(target=spawn_master_node, args=(transmit_q, receive_qs))
 
     spawn_master_node()
     # based on file input spawn routers, subscribers and publishers

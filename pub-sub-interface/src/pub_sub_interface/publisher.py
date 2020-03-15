@@ -32,6 +32,7 @@ class Publisher(ABC):
     transceivers provided
 
     Attributes:
+        id: identifier of object, its uniqueness is algorithm-dependent
         topic: topic published to
         trxs: list of transceivers (used to broadcast)
 
@@ -40,7 +41,8 @@ class Publisher(ABC):
         and message drops are not handled
     """
 
-    def __init__(self, topic: int):
+    def __init__(self, id_:bytes, topic: int):
+        self.id = id_
         self.topic = topic
         self.trxs = []
 

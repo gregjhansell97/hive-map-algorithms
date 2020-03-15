@@ -4,6 +4,8 @@
 Implements router interface for network flooding algorithm
 """
 
+import uuid
+
 from pub_sub_interface import Router as ABCRouter
 from pub_sub_interface import Transceiver
 
@@ -18,7 +20,7 @@ class Router(ABCRouter):
     """
 
     def __init__(self):
-        super().__init__()
+        super().__init__(uuid.uuid4().bytes)
         self.clocks = {}
 
     def on_recv(self, trx: Transceiver, msg):

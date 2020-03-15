@@ -54,6 +54,22 @@ class LocalTransceiver(Transceiver):
         return connections
 
     @property
+    def receive_strength(self):
+        return 1.0
+
+    @receive_strength.setter
+    def receive_strength(self, val):
+        raise NotImplementedError
+
+    @property
+    def transmit_strength(self):
+        return 1.0
+
+    @transmit_strength.setter
+    def transmit_strength(self, val):
+        raise NotImplementedError
+
+    @property
     def time(self):
         return 0
 

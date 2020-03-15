@@ -4,6 +4,8 @@
 Implements subscriber interface for network flooding algorithm
 """
 
+import uuid
+
 from pub_sub_interface import Subscriber as ABCSubscriber
 from pub_sub_interface import Transceiver
 
@@ -18,7 +20,7 @@ class Subscriber(ABCSubscriber):
     """
 
     def __init__(self, topic: int, cb):
-        super().__init__(topic, cb)
+        super().__init__(uuid.uuid4().bytes, topic, cb)
         self.clocks = {}
 
     def on_recv(self, trx: Transceiver, msg):

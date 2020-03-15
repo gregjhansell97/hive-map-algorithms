@@ -19,8 +19,7 @@ class Publisher(ABCPublisher):
     """
 
     def __init__(self, topic: int):
-        super().__init__(topic)
-        self.id = uuid.uuid4().bytes
+        super().__init__(uuid.uuid4().bytes, topic)
         self.clock = 0
 
     def publish(self, data):
