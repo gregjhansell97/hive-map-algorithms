@@ -11,11 +11,17 @@ class Transceiver(ABC):
     Layer below the network that transmits and receives messages from anonymous
     connections. Is a tool used by the main components: Publisher, Router and
     Subscriber
+
+    Attributes:
+        callbacks(list): list of coroutine callbacks
     """
 
     def __init__(self):
         # callbacks have arguments (transceiver, data) in that order
         self.callbacks = []  # list of callbacks that get invoked on recv
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({id(self)})"
 
     @property
     def max_msg_size(self):
@@ -43,7 +49,7 @@ class Transceiver(ABC):
         """
         raise NotImplementedError
 
-    @transmit_strength.setter
+    @receive_strength.setter
     def receive_strength(self, val):
         raise NotImplementedError
 
@@ -55,7 +61,7 @@ class Transceiver(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def transmit(self, data):
+    async def transmit(self, data):
         """
         Bytes of data to send to all other reachable transceivers in the 
         network. This call is non-blocking. Must be implemented by subclasses.
