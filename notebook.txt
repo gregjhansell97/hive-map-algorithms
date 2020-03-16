@@ -19,3 +19,29 @@ model where publishers push to a broker and then the broker publishes the
 information to subscribers. I'm worried about he slow joiner problem but
 optimistic that over ipc this isn't as much as a problem (as over tcp...)
 --------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+3/15/2020 - Killington, VT - IPC
+
+Man I forgot how annoying dealing with ZMQ contexts were, also the slow joiner
+problem complicated my implementations. I found I was using sleeps and figured
+that was not a good way to go about that, so went back on my implementation and
+created inter-process-queues yet again. This time there is a factory object
+called a broker that creates the transceivers, and once the broker starts up
+no more transceivers can be made. This implementation is good enough to get
+some benchmarks on (fingers crossed). I need to add hooks that track messages
+sent
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+3/15/2020 - Killington, VT - Benchmark Transceiver
+
+What do I want in a BenchmarkTransceiver (BT). The BT should be able to:
+- monitor how many messages were sent and at what transmission intensity.
+- verifying message success rate is not the job of the Transceiver
+- the transceiver should be able to adjust its range of communication, 
+- successful reception of a message adjustable probability
+- highwater marks for both send and receive q's 
+- broadcast delays
+- change location (thereby connections)
+--------------------------------------------------------------------------------
