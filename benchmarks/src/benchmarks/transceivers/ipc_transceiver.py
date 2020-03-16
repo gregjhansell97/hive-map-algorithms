@@ -1,8 +1,10 @@
 #!/usr/bin/
 # -*- coding: utf-8 -*-
 
+#from queue import Queue
 from multiprocessing import Process, Queue
 from threading import Thread
+#Process = Thread
 import uuid
 
 from pub_sub_interface.transceiver import Transceiver
@@ -18,6 +20,7 @@ class IPCTransceiver(Transceiver):
     @staticmethod
     def connect(trxs):
         #NOTE all connections must be made before starting transceivers
+        # give it shared memory and track what indexes have been accounted
         assert not any([t.transmission.thread.is_alive() for t in trxs])
         transmission = Queue()
         # attaching meta information

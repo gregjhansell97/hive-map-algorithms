@@ -88,16 +88,21 @@ def test_two_transceivers_communicate():
     assert cbs[0].log == [(trxs[0], "one large leap for gerg")]
     assert cbs[1].log == [(trxs[1], "one small step for man")]
 
+def test_many_transceivers_communicate():
+    num_trxs = 500
+    trxs = get_trxs(num_trxs)
+    IPCTransceiver.connect(trxs)
+    cbs = [get_callback() for _ in range(num_trxs)]
+    for t, cb in zip(trxs, cbs):
+        t._subscribe(cb)
+    start(trxs)
+    for i in range(num_trxs):
+        trxs[i].transmit(i)
+    # messages must get to callback log in timely manner
+    time.sleep(50)
+    stop(trxs)
+    for i in range(num_trxs):
+        assert ( 
+                set(cbs[i].log) == 
+                {(trxs[i], j) for j in range(num_trxs) if j != i})
 
-def test_receive_just_in_range_transmission():
-    """
-    Transmission message that was out of range
-    """
-    pass
-    
-def test_receive_out_of_range_transmission():
-    """
-    Transmission message that was out of range
-    """
-    pass
-    

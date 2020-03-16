@@ -45,3 +45,17 @@ What do I want in a BenchmarkTransceiver (BT). The BT should be able to:
 - broadcast delays
 - change location (thereby connections)
 --------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+3/16/2020 - Killington, VT - IPCTransceiver
+
+I was optimistic in using transceivers over multiple process, but it would
+appear that i/o is painfully slow with nodes over 500, and with nodes over 1000
+there are os issues related to scaling. I switched over to threads, and that
+brought a speed up, but still not perfect. I was doing some more research and I
+think asyncio may be the right choice, especially if I remove the centralized
+broker, and just provide queues directly to the components, this has the added
+advantage of being in the same memory space (can check range before adding
+values to the Q)
+--------------------------------------------------------------------------------
+
