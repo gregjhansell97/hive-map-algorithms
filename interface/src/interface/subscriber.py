@@ -5,13 +5,10 @@
 Facilitates receiving published messages of a certain topic. Subscriber part
 of pub-sub paradigm of hive-map
 """
-
-from abc import ABC, abstractmethod
-
 from interface.transceiver import Transceiver
 
 
-class Subscriber(ABC):
+class Subscriber(Transceiver.Callback):
     """
     Responsible for invoking callbacks when messages of a certain topic are
     received
@@ -41,17 +38,5 @@ class Subscriber(ABC):
         Args:
             trx: transceiver about to be used
         """
-        trx.subscribe(self.on_recv)
+        trx.subscribe(self)
         self.trxs.append(trx)
-
-    @abstractmethod
-    async def on_recv(self, trx: Transceiver, data):
-        """
-        Receives bytes of data at a certain time (this is the callback)
-
-        Args:
-            trx: transceiver that is invoking the callback
-            time: time in user defined units
-            data: data being received
-        """
-        raise NotImplementedError

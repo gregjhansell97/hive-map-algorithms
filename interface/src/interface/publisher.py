@@ -53,12 +53,13 @@ class Publisher(ABC):
         self.trxs.append(trx)
 
     @abstractmethod
-    async def publish(self, data):
+    async def publish(self, data, context=None):
         """
         Publish raw data to a topic, ideally subscribers of the topic receive
         this data
 
         Args:
             data: raw data being published
+            context: circumstances of publish
         """
         raise NotImplementedError

@@ -15,6 +15,16 @@ class Transceiver(ABC):
     Attributes:
         callbacks(list): list of coroutine callbacks
     """
+    class Callback(ABC):
+        async def relevant(self, context):
+            return True
+        async def invoke(self, trx, data, context): 
+            # check context is relevant
+            if await self.relevant(context):
+                await self.on_recv(trx, data, context)
+        @abstractmethod
+        async def on_recv(self, trx, data, context):
+            raise NotImplementedError
 
     def __init__(self):
         # callbacks have arguments (transceiver, data) in that order
@@ -61,31 +71,34 @@ class Transceiver(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def transmit(self, data):
+    async def transmit(self, data, context):
         """
         Bytes of data to send to all other reachable transceivers in the 
         network. This call is non-blocking. Must be implemented by subclasses.
 
         Args:
             data: information being transmitted to all other transceivers
+            context: circumstances of data transmission
 
         Raises:
             BufferError: when message cannot be sent or buffered
         """
         raise NotImplementedError
 
-    async def receive(self, data):
+    async def receive(self, data, context):
         """
         Invoked by child class to deliver messages received to transceiver. Acts 
         as the original event driver
 
         Args:
             data: information being received
+            context: circumstances of data transmission
         """
         # gather callbacks and run them
-        await asyncio.gather(*[cb(self, data) for cb in self.callbacks])
+        invocations = (cb.invoke(self, data, context) for cb in self.callbacks)
+        await asyncio.gather(*invocations)
 
-    def subscribe(self, cb):
+    def subscribe(self, cb: Callback):
         """
         Subscribes a callback that receives messages that the transceiver
         receives

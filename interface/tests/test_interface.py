@@ -40,6 +40,15 @@ class T(Transceiver):
     def transmit(self, data):
         raise NotImplementedError
 
+class Callback(Transceiver.Callback):
+    def __init__(self): 
+        super().__init__()
+        self.log = []
+    async def relevant(self, context):
+        return context != "irrelevant" and await super().relevant(context)
+    async def on_recv(self, trx, data, context):
+        self.log.append((trx, data, context))
+
 
 class P(Publisher):
     def publish(self, data):
@@ -47,12 +56,12 @@ class P(Publisher):
 
 
 class S(Subscriber):
-    async def on_recv(self, trx, data):
+    async def on_recv(self, trx, data, context):
         raise NotImplementedError
 
 
 class R(Router):
-    async def on_recv(self, trx, data):
+    async def on_recv(self, trx, data, context):
         raise NotImplementedError
 
 
@@ -66,15 +75,13 @@ def test_transceiver_max_msg_size():
     assert t.max_msg_size == math.inf
 
 
-def test_transceiver_subscription():
-    async def cb(trx, data):
-        cb.log.append((trx, data))
-
-    cb.log = []
+@pytest.mark.asyncio
+async def test_transceiver_subscription():
     t = T()
-    t.subscribe(cb)
-    asyncio.run(t.receive("some data"))
-    assert cb.log == [(t, "some data")]
+    t.subscribe(Callback())
+    await t.receive("data", "context")
+    await t.receive("ignore", "irrelevant")
+    assert all([cb.log == [(t, "data", "context")] for cb in t.callbacks])
 
 
 def test_publisher_use():

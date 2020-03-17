@@ -7,10 +7,10 @@ Implements publisher interface for network flooding algorithm
 import asyncio
 import uuid
 
-from interface import Publisher as ABCPublisher
+import interface
 
 
-class Publisher(ABCPublisher):
+class Publisher(interface.Publisher):
     """
     Implements ABCPublisher interface
 
@@ -23,10 +23,10 @@ class Publisher(ABCPublisher):
         super().__init__(uuid.uuid4().bytes, topic, *args, **kwargs)
         self.clock = 0
 
-    async def publish(self, data):
+    async def publish(self, data, context=None):
         # id and time used to make unique message
         header = (self.id, self.clock, self.topic)
         msg = (header, data)
         self.clock += 1
         # transmit over all transmitters
-        await asyncio.gather(*(t.transmit(msg) for t in self.trxs))
+        await asyncio.gather(*(t.transmit(msg, context) for t in self.trxs))

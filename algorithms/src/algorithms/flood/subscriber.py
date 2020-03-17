@@ -6,11 +6,11 @@ Implements subscriber interface for network flooding algorithm
 
 import uuid
 
-from interface import Subscriber as ABCSubscriber
+import interface
 from interface import Transceiver
 
 
-class Subscriber(ABCSubscriber):
+class Subscriber(interface.Subscriber):
     """
     Implements Subscriber interface
 
@@ -23,7 +23,7 @@ class Subscriber(ABCSubscriber):
         super().__init__(uuid.uuid4().bytes, topic, cb, *args, **kwargs)
         self.clocks = {}
 
-    async def on_recv(self, trx: Transceiver, msg):
+    async def on_recv(self, trx: Transceiver, msg, context):
         header, data = msg
         clock_id, clock, topic = header
         # not the right topic, subscriber doesn't care about it 
@@ -36,4 +36,5 @@ class Subscriber(ABCSubscriber):
         # update clock to most recent
         self.clocks[clock_id] = clock
         # invoke callback
+
         await self.callback(data)

@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from abc import ABC, abstractmethod
 import math
 
 from interface.transceiver import Transceiver
 
 
-class Router(ABC):
+class Router(Transceiver.Callback):
     """
     Responsible for forwarding messages received by publisher to other
     subscribers and routers
@@ -40,16 +39,5 @@ class Router(ABC):
         Args:
             trx: transceiver used
         """
-        trx.subscribe(self.on_recv)
+        trx.subscribe(self)
         self.trxs.append(trx)
-
-    @abstractmethod
-    async def on_recv(self, trx: Transceiver, msg):
-        """
-        Receives bytes of data at a certain time (this is the callback)
-
-        Args:
-            trx: transceiver that is invoking the callback
-            msg: message being published
-        """
-        raise NotImplementedError

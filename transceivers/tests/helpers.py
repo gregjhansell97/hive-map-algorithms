@@ -6,6 +6,14 @@ Provides helpful functions for tests
 """
 import pytest
 
+from interface import Transceiver
+
+class Callback(Transceiver.Callback):
+    def __init__(self):
+        super().__init__()
+        self.log = []
+    async def on_recv(self, trx, data, context):
+        self.log.append((trx, data))
 
 def get_callback():
     """
@@ -16,10 +24,4 @@ def get_callback():
         arguments
     """
 
-    async def cb(trx, data):
-        # callbacks for transceivers expects a transceiver instance, a time,
-        # and data
-        cb.log.append((trx, data))
-
-    cb.log = []  # log tracks the data received and by which transceiver
-    return cb
+    return Callback()

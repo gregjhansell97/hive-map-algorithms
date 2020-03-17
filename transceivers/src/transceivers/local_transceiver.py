@@ -4,10 +4,10 @@
 import asyncio
 import math
 
-from interface.transceiver import Transceiver
+import interface
 
 
-class LocalTransceiver(Transceiver):
+class LocalTransceiver(interface.Transceiver):
     """
     """
 
@@ -29,7 +29,7 @@ class LocalTransceiver(Transceiver):
             connections = [c for c in trxs if c is not t]
             t.channels.append(connections)
 
-    async def transmit(self, data):
+    async def transmit(self, data, context=None):
         """
         Gather receive method of all connections on every channel
 
@@ -38,4 +38,4 @@ class LocalTransceiver(Transceiver):
         """
         # flattens connections
         connections = sum(self.channels, [])
-        await asyncio.gather(*(t.receive(data) for t in connections))
+        await asyncio.gather(*(t.receive(data, context) for t in connections))

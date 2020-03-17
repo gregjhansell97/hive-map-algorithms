@@ -6,7 +6,7 @@ from interface.subscriber import Subscriber
 from interface.router import Router
 from interface.transceiver import Transceiver
 
-__all__ = ["Publisher", "Subscriber", "Router"]
+__all__ = ["Publisher", "Subscriber", "Router", "Transceiver"]
 
 try:
     # Change here if project is renamed and does not equal the package name

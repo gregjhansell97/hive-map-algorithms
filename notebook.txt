@@ -84,4 +84,20 @@ long(ish) break:
     subscribed to these broadcasts
 --------------------------------------------------------------------------------
 
+--------------------------------------------------------------------------------
+3/17/2020 - Killington, VT - Transceivers
 
+I've been giving Transceivers more thought, and they should have a filter option
+where meta data is provided and hooks are in place to drop messages if metadata
+does not meet the requirements. Requirements could be range, so if a message
+only wants to be broadcasted in a certain radius or only on main roads thats
+where it will be deliverd - should that be integrated with publish as a form of
+topic? Like topic and relevance kind of stuff... so you may be subscribed to a
+topic but its relevance is important to you like where the topic is being
+published from... but then that becomes a pub/sub/router problem though perhaps
+it can be implemented on a transceiver levela
+
+ALSO lets run callbacks from subscribe and logging information in a threadpool,
+I was reading up on asyncio's run_in_executor which I wish I knew about for
+earlier projects
+--------------------------------------------------------------------------------
