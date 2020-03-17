@@ -59,3 +59,29 @@ advantage of being in the same memory space (can check range before adding
 values to the Q)
 --------------------------------------------------------------------------------
 
+--------------------------------------------------------------------------------
+3/16/2020 - Killington, VT - Transceiver
+
+I switched over to asyncio for broadcasting messages and I was very impressed,
+I was able to simulate interactions of 1000 in a reasonable amount of time which
+was not observed for both threads and processes. Threads still worked but was
+much slower and processes had an os error (something about too many semaphores).
+These are still useful transceivers though so I'm keeping them archived for now.
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+3/16/2020 - Killington, VT - Next Steps
+
+So I have a good setup for transceivers. I'm planning on changing gears after a
+long(ish) break:
+1. tackle leprechaun simulation; I want to have it running without any pub-sub
+    library. Goal is to have a leprechaun chasing a pot of gold, the user can
+    move both the leprechaun and the pot of gold. When the leprechaun moves it
+    leaves a rainbow behind it...
+2. get tests for algorithms squared away (using newly designed transceivers)
+3. design first benchmark before BenchmarkTransceiver is made: just a bunch of
+    nodes (not moving) and some are broadcasting messages and others are
+    subscribed to these broadcasts
+--------------------------------------------------------------------------------
+
+
