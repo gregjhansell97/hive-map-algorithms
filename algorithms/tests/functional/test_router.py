@@ -9,7 +9,7 @@ in the system tests
 from collections import defaultdict
 import pytest
 
-from tests.transceivers import LocalTransceiver
+from transceivers import LocalTransceiver
 
 
 def test_initialization(algorithm):
@@ -35,7 +35,6 @@ def test_use_multiple_transceivers(algorithm):
     Verifies subscriber can use multiple tranceivers without crashing
     """
     Publisher, Subscriber, Router = algorithm
-    # set up publisher
     r = Router()
     ts = [LocalTransceiver() for _ in range(10)]
     for t in ts:

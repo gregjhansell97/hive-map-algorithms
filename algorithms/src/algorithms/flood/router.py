@@ -4,10 +4,11 @@
 Implements router interface for network flooding algorithm
 """
 
+import asyncio
 import uuid
 
-from pub_sub_interface import Router as ABCRouter
-from pub_sub_interface import Transceiver
+from interface import Router as ABCRouter
+from interface import Transceiver
 
 
 class Router(ABCRouter):
@@ -19,11 +20,11 @@ class Router(ABCRouter):
             if a message is stale
     """
 
-    def __init__(self):
-        super().__init__(uuid.uuid4().bytes)
+    def __init__(self, *args, **kwargs):
+        super().__init__(uuid.uuid4().bytes, *args, **kwargs)
         self.clocks = {}
 
-    def on_recv(self, trx: Transceiver, msg):
+    async def on_recv(self, trx: Transceiver, msg):
         header, data = msg
         clock_id, clock, topic = header
         # check for stale message
@@ -34,5 +35,4 @@ class Router(ABCRouter):
         # update message to most recent
         self.clocks[clock_id] = clock
         # broadcast message to all channels
-        for t in self.trxs:
-            t.transmit(msg)
+        await asyncio.gather(*(t.transmit(msg) for t in self.trxs))

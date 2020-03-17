@@ -5,10 +5,10 @@
 Unit tests for Publisher
 """
 
-from collections import defaultdict
+import asyncio
 import pytest
 
-from tests.transceivers import LocalTransceiver
+from transceivers import LocalTransceiver
 
 def test_initialization(algorithm):
     """
@@ -17,41 +17,17 @@ def test_initialization(algorithm):
     Publisher, Subscriber, Router = algorithm
     p = Publisher(10)
 
-
-def test_use_local_transceiver(algorithm):
+@pytest.mark.asyncio
+async def test_publish_no_transceiver(algorithm):
     """
-    Verify publisher can use a transceiver object
-    """
-    Publisher, Subscriber, Router = algorithm
-    # set up publisher
-    p = Publisher(10)
-    t = LocalTransceiver()
-    p.use(t)
-
-
-def test_use_multiple_local_transceivers(algorithm):
-    """
-    Verify publisher can use multiple transceivers
-    """
-    Publisher, Subscriber, Router = algorithm
-    # set up publisher
-    p = Publisher(5)
-    ts = [LocalTransceiver() for _ in range(10)]
-    for t in ts:
-        p.use(t)
-
-
-def test_publish_no_transceiver(algorithm):
-    """
-    Verify publisher can publish even with no means of transceiver. May want to
-    consider raising an error if publish is called with no tranceiver...
+    Verify publisher can publish even with no means of transceiver
     """
     Publisher, Subscriber, Router = algorithm
     p = Publisher(5)
-    p.publish("hello world")
+    await p.publish("hello world")
 
-
-def test_publish_one_local_transceiver(algorithm):
+@pytest.mark.asyncio
+async def test_publish_one_local_transceiver(algorithm):
     """
     Verify publish works with when using one tranceiver
     """
@@ -59,10 +35,11 @@ def test_publish_one_local_transceiver(algorithm):
     p = Publisher(5)
     t = LocalTransceiver()
     p.use(t)
-    p.publish("hello world")
+    await p.publish("hello world")
 
 
-def test_publish_many_transceivers(algorithm):
+@pytest.mark.asyncio
+async def test_publish_many_transceivers(algorithm):
     """
     Verify publish works with when using multiple tranceivers
     """
@@ -71,10 +48,10 @@ def test_publish_many_transceivers(algorithm):
     ts = [LocalTransceiver() for _ in range(10)]
     for t in ts:
         p.use(t)
-    p.publish("goodbye yellow brick road")
+    await p.publish("goodbye yellow brick road")
 
-
-def test_many_publish_many_transceivers(algorithm):
+@pytest.mark.asyncio
+async def test_many_publish_many_transceivers(algorithm):
     """
     Verify publish works many times with when using multiple tranceivers
     """
@@ -83,5 +60,4 @@ def test_many_publish_many_transceivers(algorithm):
     ts = [LocalTransceiver() for _ in range(10)]
     for t in ts:
         p.use(t)
-    for i in range(10):
-        p.publish("goodbye yellow brick road")
+    await asyncio.gather(*(p.publish(i) for i in range(10)))

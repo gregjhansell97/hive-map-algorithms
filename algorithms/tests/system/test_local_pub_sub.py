@@ -6,144 +6,132 @@ Tests pub-sub network without routers involved, mostly analyzes the interaction
 between subscribers and publishers
 """
 
+import asyncio
 import pytest
 
-from tests.functional.test_subscriber import get_callback
-from tests.transceivers import LocalTransceiver
+from tests.functional.helpers import get_callback
+from tests.system.helpers import TOPIC, DIFF_TOPIC, connect
 
-
-def test_one_pub_one_sub_one_local_connection(algorithm):
+@pytest.mark.asyncio
+async def test_one_pub_one_sub_one_local_connection(algorithm):
     """
     Get one publisher instance and one subscriber instance and connect them
     over the same topic and confirm that messages get sent 
     """
     Publisher, Subscriber, Router = algorithm
-    TOPIC = 10
     p = Publisher(TOPIC)
-    cb = get_callback()
-    s = Subscriber(TOPIC, cb)
-    LocalTransceiver.connect([p, s])
-    p.publish(b"hello")
-    assert cb.log == [b"hello"]
-    p.publish(b"goodbye")
-    assert cb.log == [b"hello", b"goodbye"]
+    s = Subscriber(TOPIC, get_callback())
+    # connect components
+    connect([p, s])
+    # confirm simple publishes work
+    await asyncio.gather(*(p.publish(i) for i in range(10)))
+    assert set(s.callback.log) == set(range(10))
 
-
-def test_one_pub_one_sub_many_local_connections(algorithm):
+@pytest.mark.asyncio
+async def test_one_pub_one_sub_many_local_connections(algorithm):
     """
     Get one publisher instance and one subscriber instance and connect them
     with multiple transceivers and verify that the message only gets delivered
     once... is that a property we want to enforce to some capacity?
     """
     Publisher, Subscriber, Router = algorithm
-    TOPIC = 10
     p = Publisher(TOPIC)
-    cb = get_callback()
-    s = Subscriber(TOPIC, cb)
+    s = Subscriber(TOPIC, get_callback())
+    # connect components
     for i in range(10):
-        LocalTransceiver.connect([p, s])
-    p.publish(b"hello")
-    assert cb.log == [b"hello"]
-    p.publish(b"goodbye")
-    assert cb.log == [b"hello", b"goodbye"]
+        connect([p, s])
+    # confirm simple publishes work 
+    await p.publish("msg1")
+    assert s.callback.log == ["msg1"]
+    await p.publish("msg2")
+    assert s.callback.log == ["msg1", "msg2"]
+    # clear log
+    s.callback.log = []
+    await asyncio.gather(*(p.publish(i) for i in range(10)))
+    assert set(s.callback.log) == set(range(10))
 
 
-def test_one_pub_many_sub_local_connections(algorithm):
+@pytest.mark.asyncio
+async def test_one_pub_many_sub_local_connections(algorithm):
     """
     Get one publisher instance and many subscribers and verify that the 
     messages are published to all subscribers
     """
     Publisher, Subscriber, Router = algorithm
-    TOPIC = 10
-    DIFF_TOPIC = 11
+    # publishers
     p = Publisher(TOPIC)
+    # subscribers
+    num_subs = 10
+    subs = [Subscriber(TOPIC, get_callback()) for _ in range(num_subs)]
+    diff_subs = [
+            Subscriber(DIFF_TOPIC, get_callback()) for _ in range(num_subs)
+    ]
+    # connect components
+    connect([p] + subs + diff_subs)
+    # verification
+    await p.publish(1)
+    assert all([s.callback.log == [1] for s in subs])
+    assert all([s.callback.log == [] for s in diff_subs])
+    await p.publish(2)
+    assert all([s.callback.log == [1, 2] for s in subs])
+    assert all([s.callback.log == [] for s in diff_subs])
 
-    sub_callbacks = [get_callback() for _ in range(10)]
-    subs = [Subscriber(TOPIC, cb) for cb in sub_callbacks]
-
-    diff_sub_callbacks = [get_callback() for _ in range(10)]
-    diff_subs = [Subscriber(DIFF_TOPIC, cb) for cb in diff_sub_callbacks]
-    LocalTransceiver.connect([p] + subs + diff_subs)
-
-    p.publish(b"hello")
-    for cb in sub_callbacks:
-        assert cb.log == [b"hello"]
-    for cb in diff_sub_callbacks:
-        assert cb.log == []
-
-    p.publish(b"goodbye")
-    for cb in sub_callbacks:
-        assert cb.log == [b"hello", b"goodbye"]
-    for cb in diff_sub_callbacks:
-        assert cb.log == []
-
-
-def test_many_pub_one_sub_local_connections(algorithm):
+@pytest.mark.asyncio
+async def test_many_pub_one_sub_local_connections(algorithm):
     """
     Get many publisher instances and many subscribers and verify that the 
     messages are published to the subscriber
     """
     Publisher, Subscriber, Router = algorithm
-    TOPIC = 10
-    DIFF_TOPIC = 11
-    pubs = [Publisher(TOPIC) for _ in range(10)]
-    diff_pubs = [Publisher(DIFF_TOPIC) for _ in range(10)]
-
-    cb = get_callback()
-    sub = Subscriber(TOPIC, cb)
-
-    LocalTransceiver.connect([sub] + pubs + diff_pubs)
-
+    # publishers
+    num_pubs = 10
+    pubs = [Publisher(TOPIC) for _ in range(num_pubs)]
+    diff_pubs = [Publisher(DIFF_TOPIC) for _ in range(num_pubs)]
+    # subscribers
+    sub = Subscriber(TOPIC, get_callback())
+    # connect components
+    connect([sub] + pubs + diff_pubs)
+    # verification
     expected_log = []
-    pubs[0].publish(b"hello")
-    expected_log.append(b"hello")
-    assert cb.log == expected_log
+    await pubs[0].publish(0)
+    assert sub.callback.log == [0]
+    # other topic, subscriber should not be interested
+    await asyncio.gather(*(p.publish("no msg") for p in diff_pubs))
+    assert sub.callback.log == [0]
+    # clear log
+    sub.callback.log = []
+    # subscriber should be interested
+    transmissions = (p.publish(i) for p, i in zip(pubs, range(len(pubs))))
+    await asyncio.gather(*transmissions)
+    assert set(sub.callback.log) == set(range(len(pubs)))
 
-    for p in diff_pubs:
-        p.publish(b"kaput")
-    assert cb.log == [b"hello"]
 
-    for p in pubs:
-        p.publish(b"works")
-        expected_log.append(b"works")
-    assert cb.log == expected_log
-
-
-def test_many_pub_many_sub_local_connections(algorithm):
+@pytest.mark.asyncio
+async def test_many_pub_many_sub_local_connections(algorithm):
     """
     Get many publisher instances and many subscribers and verify that the 
     messages are published to all subscribers
     """
     Publisher, Subscriber, Router = algorithm
-    TOPIC = 10
-    DIFF_TOPIC = 11
-    pubs = [Publisher(TOPIC) for _ in range(10)]
-    diff_pubs = [Publisher(DIFF_TOPIC) for _ in range(10)]
-
-    sub_callbacks = [get_callback() for _ in range(10)]
-    subs = [Subscriber(TOPIC, cb) for cb in sub_callbacks]
-
-    diff_sub_callbacks = [get_callback() for _ in range(10)]
-    diff_subs = [Subscriber(DIFF_TOPIC, cb) for cb in diff_sub_callbacks]
-    LocalTransceiver.connect(pubs + diff_pubs + subs + diff_subs)
-
-    expected_log = []
-    expected_diff_log = []
-
-    pubs[0].publish(b"sign")
-    expected_log.append(b"sign")
-    for cb in sub_callbacks:
-        assert cb.log == expected_log
-    for cb in diff_sub_callbacks:
-        assert cb.log == expected_diff_log
-
-    for p in pubs:
-        p.publish(b"open eyes")
-        expected_log.append(b"open eyes")
-    for p in diff_pubs:
-        p.publish(b"belong")
-        expected_diff_log.append(b"belong")
-    for cb in sub_callbacks:
-        assert cb.log == expected_log
-    for cb in diff_sub_callbacks:
-        assert cb.log == expected_diff_log
+    # publishers
+    num_pubs = 10
+    pubs = [Publisher(TOPIC) for _ in range(num_pubs)]
+    diff_pubs = [Publisher(DIFF_TOPIC) for _ in range(num_pubs)]
+    # subscribers
+    num_subs = 10
+    subs = [Subscriber(TOPIC, get_callback()) for _ in range(num_subs)]
+    diff_subs = [Subscriber(DIFF_TOPIC, get_callback()) for _ in subs]
+    # connect components
+    connect(pubs + diff_pubs + subs + diff_subs)
+    # verify
+    await pubs[0].publish(0)
+    assert all([s.callback.log == [0] for s in subs])
+    assert all([s.callback.log == [] for s in diff_subs])
+    # clear logs
+    for s in subs:
+        s.callback.log = []
+    await asyncio.gather(*(p.publish(id(p)) for p in pubs + diff_pubs))    
+    pub_ids = {id(p) for p in pubs} 
+    diff_pub_ids = {id(p) for p in diff_pubs} 
+    assert all([set(s.callback.log) == pub_ids for s in subs])
+    assert all([set(s.callback.log) == diff_pub_ids for s in diff_subs])

@@ -53,7 +53,7 @@ class Publisher(ABC):
         self.trxs.append(trx)
 
     @abstractmethod
-    def publish(self, data):
+    async def publish(self, data):
         """
         Publish raw data to a topic, ideally subscribers of the topic receive
         this data

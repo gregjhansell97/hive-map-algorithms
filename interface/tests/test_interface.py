@@ -58,6 +58,7 @@ class R(Router):
 
 ID = 0
 TOPIC = 1
+CALLBACK = None
 
 
 def test_transceiver_max_msg_size():
@@ -84,7 +85,7 @@ def test_publisher_use():
 
 def test_subscriber_use():
     t = T()
-    s = S(ID, TOPIC)
+    s = S(ID, TOPIC, CALLBACK)
     s.use(t)
 
 

@@ -5,45 +5,45 @@
 Tests pub-sub network with routers involved
 """
 
+import asyncio
 import pytest
 
-from tests.functional.test_subscriber import get_callback
-from tests.transceivers import LocalTransceiver
+from tests.functional.helpers import get_callback
+from tests.system.helpers import TOPIC, DIFF_TOPIC, connect
 
-
-def test_one_pub_one_sub_one_router_over_local_connection(algorithm):
+@pytest.mark.asyncio
+async def test_one_pub_one_sub_one_router_over_local_connection(algorithm):
     """
     Get one publisher instance and one subscriber instance and connect them both
     to a router
     """
     Publisher, Subscriber, Router = algorithm
-    TOPIC = 10
     p = Publisher(TOPIC)
-    cb = get_callback()
-    s = Subscriber(TOPIC, cb)
+    s = Subscriber(TOPIC, get_callback())
     r = Router()
-    LocalTransceiver.connect([p, r]) # publisher and router connection
-    LocalTransceiver.connect([s, r]) # subscriber and router connection
-    p.publish("hello")
-    assert cb.log == ["hello"]
-    p.publish("goodbye")
-    assert cb.log == ["hello", "goodbye"]
+    # connections
+    connect([p, r]) # publisher and router connection
+    connect([s, r]) # subscriber and router connection
+    # verification
+    await asyncio.gather(*(p.publish(i) for i in range(10)))
+    assert set(s.callback.log) == set(range(10))
 
-def test_one_pub_one_sub_router_love_triangle_over_local_connections(algorithm):
+@pytest.mark.asyncio
+async def test_one_pub_one_sub_router_love_triangle_over_local_connections(algorithm):
     """
     Get one publisher instance and one subscriber instance and connect them to
     different routers and then connect all routers together
     """
     Publisher, Subscriber, Router = algorithm
-    TOPIC = 10
     p = Publisher(TOPIC)
-    cb = get_callback()
-    s = Subscriber(TOPIC, cb)
+    s = Subscriber(TOPIC, get_callback())
     routers = [Router() for i in range(3)]
-    LocalTransceiver.connect([p, routers[0]]) # publisher and router connection
-    LocalTransceiver.connect([s, routers[1]]) # subscriber and router connection
-    LocalTransceiver.connect(routers)
-    p.publish("hello")
-    assert cb.log == ["hello"]
+    # connections
+    connect([p, routers[0]]) # publisher and router connection
+    connect([s, routers[1]]) # subscriber and router connection
+    connect(routers)
+    await asyncio.gather(*(p.publish(i) for i in range(10)))
+    assert set(s.callback.log) == set(range(10))
 
+#TODO confirm multiple connections on a router
 

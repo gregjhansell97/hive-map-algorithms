@@ -6,28 +6,10 @@ Unit tests for Subscriber. Does not test actual receiving of messages, that is
 in the system tests
 """
 
-from collections import defaultdict
 import pytest
 
-from tests.transceivers import LocalTransceiver
-
-def get_callback():
-    """
-    Creates a callback instance that tracks invocations. This function was
-    created because a lot of tests create a callback, especially the system
-    tests!
-    
-    Returns (lambda d): callback that takes in data as argument
-    """
-
-    def cb(data):
-        # callbacks for transceivers expects a transceiver instance and
-        # raw-bytes being received
-        cb.log.append(data)
-
-    cb.log = []  # log tracks the data received and by which transceiver
-    return cb
-
+from transceivers import LocalTransceiver
+from tests.functional.helpers import get_callback
 
 def test_initialization(algorithm):
     """

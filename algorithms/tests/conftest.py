@@ -8,8 +8,6 @@
     https://pytest.org/latest/plugins.html
 """
 
-from tests.transceivers import LocalTransceiver
-
 from algorithms import flood
 
 def pytest_generate_tests(metafunc):
@@ -22,9 +20,3 @@ def pytest_generate_tests(metafunc):
                 (flood.Publisher, flood.Subscriber, flood.Router)
         ]
         metafunc.parametrize("algorithm", algorithms)
-    if "Transceiver" in metafunc.fixturenames:
-        # parameterzed transceivers
-        transceiver_classes = [
-                LocalTransceiver
-        ]
-        metafunc.parametrize("Transceiver", transceiver_classes)

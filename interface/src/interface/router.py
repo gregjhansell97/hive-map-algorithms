@@ -50,7 +50,6 @@ class Router(ABC):
 
         Args:
             trx: transceiver that is invoking the callback
-            time: time in user defined units
             msg: message being published
         """
         raise NotImplementedError

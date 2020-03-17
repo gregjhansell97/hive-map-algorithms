@@ -26,7 +26,7 @@ class Subscriber(ABC):
             trxs: list of transceivers (used to broadcast and listen)
     """
 
-    def __init__(self, id_: bytes, topic: int, cb=None, heartbeat_rate=0.0):
+    def __init__(self, id_: bytes, topic: int, cb, heartbeat_rate=0.0):
         self.id = id_
         self.topic = topic
         self.heartbeat_rate = heartbeat_rate
