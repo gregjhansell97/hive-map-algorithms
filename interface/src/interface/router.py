@@ -1,35 +1,46 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from abc import ABC, abstractmethod
 import math
 
+from interface.loggable import Loggable
 from interface.transceiver import Transceiver
 
 
-class Router(Transceiver.Callback):
+class Router(Loggable, ABC):
     """
     Responsible for forwarding messages received by publisher to other
     subscribers and routers
     
     Attributes:
-        id: identifier of object, its uniqueness is algorithm-dependent
-        heartbeat_rate: interaction rate with other nodes
-        routing_table_size: max size of routing table
-        topic_priorities: list of topics of topics in prefered order
+        uid: identifier of object
+        heartbeat_rate: interaction rate with other nodes (cycles per second)
+        routing_table_size: max number of items router can store
+        topic_preferences: list of topics in prefered order
     """
 
     def __init__(
         self,
-        id_: bytes,
+        uid=None,
         routing_table_size=math.inf,
-        topic_priorities=[],
+        topic_preferences=[],
         heartbeat_rate=0.0,
     ):
-        self.id = id_
+        super().__init__()
+        if any(arg is None for arg in [uid]):
+            raise TypeError("args cannot be none")
+        self.uid = uid
         self.routing_table_size = routing_table_size
-        self.topic_priorities = topic_priorities
         self.heartbeat_rate = heartbeat_rate
+        self.topic_preferences = topic_preferences
         self.trxs = []
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return f"{self.uid}"
 
     def use(self, trx: Transceiver):
         """
@@ -39,5 +50,9 @@ class Router(Transceiver.Callback):
         Args:
             trx: transceiver used
         """
-        trx.subscribe(self)
+        trx.subscribe(self.on_recv)
         self.trxs.append(trx)
+
+    @abstractmethod
+    async def on_recv(self, trx, data):
+        raise NotImplementedError

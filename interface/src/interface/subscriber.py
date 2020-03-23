@@ -5,30 +5,42 @@
 Facilitates receiving published messages of a certain topic. Subscriber part
 of pub-sub paradigm of hive-map
 """
+
+from abc import ABC, abstractmethod
+
+from interface.loggable import Loggable
 from interface.transceiver import Transceiver
 
 
-class Subscriber(Transceiver.Callback):
+class Subscriber(Loggable, ABC):
     """
     Responsible for invoking callbacks when messages of a certain topic are
     received
 
     Attributes:
-        id: identifier of object, its uniqueness is algorithm-dependent
-        topic: topic of interest for subscriber
-        heartbeat_rate: interaction rate with other nodes
+        uid: identifier of object
+        heartbeat_rate: cycles per second of node interations routine 
         callback: callback invoked on receiving message matching topic; it is a
             function that takes in one argument; this argument is the data
             published
-            trxs: list of transceivers (used to broadcast and listen)
+        trxs: list of transceivers (used to broadcast and listen)
     """
 
-    def __init__(self, id_: bytes, topic: int, cb, heartbeat_rate=0.0):
-        self.id = id_
+    def __init__(self, topic=None, uid=None, callback=None, heartbeat_rate=0.0):
+        super().__init__()
+        if any(arg is None for arg in [uid, topic, callback]):
+            raise TypeError("values cannot be none")
+        self.uid = uid
         self.topic = topic
+        self.callback = callback
         self.heartbeat_rate = heartbeat_rate
-        self.callback = cb
         self.trxs = []
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return f"{self.uid}"
 
     def use(self, trx: Transceiver):
         """
@@ -38,5 +50,9 @@ class Subscriber(Transceiver.Callback):
         Args:
             trx: transceiver about to be used
         """
-        trx.subscribe(self)
+        trx.subscribe(self.on_recv)
         self.trxs.append(trx)
+
+    @abstractmethod
+    async def on_recv(self, trx, data):
+        raise NotImplementedError

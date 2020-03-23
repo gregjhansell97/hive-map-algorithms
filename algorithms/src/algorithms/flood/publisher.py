@@ -5,7 +5,6 @@ Implements publisher interface for network flooding algorithm
 """
 
 import asyncio
-import uuid
 
 import interface
 
@@ -19,14 +18,15 @@ class Publisher(interface.Publisher):
         clock: lamport clock where one event is a publish
     """
 
-    def __init__(self, topic: int, *args, **kwargs):
-        super().__init__(uuid.uuid4().bytes, topic, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.clock = 0
 
-    async def publish(self, data, context=None):
-        # id and time used to make unique message
-        header = (self.id, self.clock, self.topic)
+    async def publish(self, topic, data):
+        # uid and time used to make unique message
+        header = (self.uid, self.clock, topic)
         msg = (header, data)
         self.clock += 1
         # transmit over all transmitters
-        await asyncio.gather(*(t.transmit(msg, context) for t in self.trxs))
+        await self.log(("published", topic, data))
+        await asyncio.gather(*(t.transmit(msg) for t in self.trxs))

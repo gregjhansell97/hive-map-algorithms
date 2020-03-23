@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import asyncio
+import logging
 import math
 
 import interface
@@ -11,8 +12,8 @@ class LocalTransceiver(interface.Transceiver):
     """
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.channels = []
 
     @classmethod
@@ -29,7 +30,7 @@ class LocalTransceiver(interface.Transceiver):
             connections = [c for c in trxs if c is not t]
             t.channels.append(connections)
 
-    async def transmit(self, data, context=None):
+    async def transmit(self, data):
         """
         Gather receive method of all connections on every channel
 
@@ -38,4 +39,4 @@ class LocalTransceiver(interface.Transceiver):
         """
         # flattens connections
         connections = sum(self.channels, [])
-        await asyncio.gather(*(t.receive(data, context) for t in connections))
+        await asyncio.gather(*(t.receive(data) for t in connections))

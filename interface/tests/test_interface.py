@@ -40,15 +40,6 @@ class T(Transceiver):
     def transmit(self, data):
         raise NotImplementedError
 
-class Callback(Transceiver.Callback):
-    def __init__(self): 
-        super().__init__()
-        self.log = []
-    async def relevant(self, context):
-        return context != "irrelevant" and await super().relevant(context)
-    async def on_recv(self, trx, data, context):
-        self.log.append((trx, data, context))
-
 
 class P(Publisher):
     def publish(self, data):
@@ -65,38 +56,69 @@ class R(Router):
         raise NotImplementedError
 
 
-ID = 0
+def get_trx_callback():
+    async def cb(trx, data):
+        cb.log += [(trx, data)]
+
+    cb.log = []
+    return cb
+
+
+ID = "ID"
 TOPIC = 1
-CALLBACK = None
 
 
-def test_transceiver_max_msg_size():
+def CALLBACK(data):
+    pass
+
+
+def test_transceiver():
     t = T()
+    assert str(t) == f"{id(t)}"
+    assert t.transmit_strength == 1
+    assert t.receive_strength == 1
+    time = t.time
     assert t.max_msg_size == math.inf
 
 
 @pytest.mark.asyncio
 async def test_transceiver_subscription():
     t = T()
-    t.subscribe(Callback())
-    await t.receive("data", "context")
-    await t.receive("ignore", "irrelevant")
-    assert all([cb.log == [(t, "data", "context")] for cb in t.callbacks])
+    for i in range(10):
+        t.subscribe(get_trx_callback())
+    await t.receive("d")
+    await t.receive("m")
+    assert all([cb.log == [(t, "d"), (t, "m")] for cb in t.callbacks])
+    await t.log("test complete")
+    t.logs == ["test complete"]
 
 
-def test_publisher_use():
+def test_missing_args():
+    """
+    Create subclasses that do not implement methods, value errors expected
+    """
+    sub_classes = [P, S, R]
+    for SubC in sub_classes:
+        with pytest.raises(TypeError):
+            c = SubC()
+
+
+def test_publisher():
     t = T()
-    p = P(ID, TOPIC)
+    p = P(uid=ID)
     p.use(t)
+    assert str(p) == ID
 
 
-def test_subscriber_use():
+def test_subscriber():
     t = T()
-    s = S(ID, TOPIC, CALLBACK)
+    s = S(uid=ID, topic=TOPIC, callback=CALLBACK)
     s.use(t)
+    assert str(s) == ID
 
 
-def test_router_use():
+def test_router():
     t = T()
-    r = R(ID)
+    r = R(uid=ID)
     r.use(t)
+    assert str(r) == ID

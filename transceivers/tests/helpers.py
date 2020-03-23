@@ -8,13 +8,6 @@ import pytest
 
 from interface import Transceiver
 
-class Callback(Transceiver.Callback):
-    def __init__(self):
-        super().__init__()
-        self.log = []
-    async def on_recv(self, trx, data, context):
-        self.log.append((trx, data))
-
 def get_callback():
     """
     Creates a callback instance that tracks invocations. This function was
@@ -23,5 +16,7 @@ def get_callback():
     Returns (lambda t, d): callback that takes in a transceiver and data as
         arguments
     """
-
-    return Callback()
+    async def cb(trx, data):
+        cb.log.append((trx, data))
+    cb.log = []
+    return cb

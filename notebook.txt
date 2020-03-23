@@ -1,5 +1,22 @@
 
 --------------------------------------------------------------------------------
+2/23/20 - Troy, NY - Thoughts on Publishers:
+should a publisher be able to receive messages:
+* I don't think they should because a publisher is going to be the
+    weakest link in the network with the most SWaP dependence so it should do
+    as little as possible. There would be some benefits to publisher having
+    back-and-forth communication with routers/subscribers such as error
+    detection; in a way that goes against the pub-sub paradigm. If a publisher
+    publishes something, it shouldn't are what is listening. 
+* To consider failurs: what if there ar eno subscribers? message-id
+    conflicts? matching message id from othe rmessages? no acks received? other
+    messages publishing (don't flood network...)
+* What if nodes look for surounding nodes to find an identity, like
+    a local (neighboring) agreement on a unique id...
+* I want to leave the routing to the routing nodes, I think it's 
+    their responsibility... the publisher should be a lazy (low power) as
+    possible
+--------------------------------------------------------------------------------
 3/15/2020 - Killington, VT - Meta-level
 
 I want to log more information and thoughts via keyboard rather than notebook.
@@ -101,3 +118,139 @@ ALSO lets run callbacks from subscribe and logging information in a threadpool,
 I was reading up on asyncio's run_in_executor which I wish I knew about for
 earlier projects
 --------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+3/17/2020 - Killington, VT - Logging
+
+Transceivers:
+- on message reception
+    - transceiver in question
+    - receiving strength
+    - message
+    - context
+    - cpu time
+- on message transmission
+    - transceiver in question
+    - transmit strength
+    - message
+    - context
+    - cpu time
+- on subscription
+    - transceiver in question
+    - who subscribed
+    - cpu time
+
+Transceiver.Callback (covers Router and Subscriber)
+- on invocation
+    - whether data was relevant
+    - cpu time
+    - data
+    - context
+    - transceiver calling invocation
+    - Callback in question (Router or Suscriber)
+
+Publisher
+- on publish
+    - self
+    - data 
+    - context
+
+Subscriber
+- on message delivery
+    - trx
+    - data
+    - context
+    - time
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+3/18/2020 - Killington, VT - Logging
+
+This has never been about transceivers or even logging! The real thing I want
+to record are a snap-shot of publishers, subscribers and routers at a point in
+time, these snapshots may include things related to the publisher, subscriber
+and routers (like transceivers). New interface called Loggable which forces
+subsclasses to implement logging functions
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+3/18/2020 - Killington, VT - context vs topic
+
+I've been thinking about these two terms a lot. Topic is a subset of context,
+so if a publisher published to a certan topic, then the context of the message
+would be that its for that specific topic. Subscribers would look at the
+context (thereby the topic) to see if its relevant for them to deliver. I'm
+trying to introduce the idea in the implementation: if relevant then publish
+otherwise dont, also if subscriber is overriden one can modify relevant and 
+on_recv to handle new context... 
+
+I'm just imagining contexts where the user requests that a certain radius be
+met or number of hops, kinda keeping that customization up to the developers,
+also the context may be different for various transceiver, lets say one
+transceiver is location based and the other is connection oriented how are to
+merge together context across the two?
+
+ALSO how is a subscriber supposed to indicate to a router what context its
+interested in: this may be prudent for certain algorithms that take in this
+information ahead of time
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+3/18/2020 - Killington, VT - context vs topic
+
+So I've thought some more about this topic/context thing, and although context
+offers greater flexibility, certain (low-level) systems may have limited support
+for contexts, so I want to have contexts as just topics for algorithms but have
+the option for the developer to explor more "complicated" arrangements if they
+want to override that behavior
+
+Honestly a lot of that behavior can be enforced just on a Transceiver level, so
+if "they" wanted to make custom transceivers that receive information a certain
+way and transmit it a different way (so like num-hops, or range) and drop it 
+if it doesn't meet these requirements that up to the Transceiver, but at the
+same time what if that varies from different topics like what if one topic you
+wanted a lot of range, I guess you could adjust the transceiver yourself before
+publishing
+
+So yeah thats the solution I guess: Transceivers can handle most of the context
+stuff and make those descisions which also keeps context consistent across 
+varying transceivers: A transceiver of a certain type can only communicate with
+types capable of handling its context stuff. I realize this is super confusing,
+let me try to put in in simpler words:
+
+Subscriber, Router and Publisher use transceivers. Transceivers are the
+entrypoint for receiving data and exitpoint for transmitting data. A transceiver
+could receive data that has "meta" information (ex: context). Then when it
+passes that along to a Router or Subscriber, its expected to get context
+backout
+
+If a developer wants to
+incorporate some sort of context where only certain nodes are can receive a
+message then in their transceiver implementation they receive data w 
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+3/18/2020 - Killington, VT - context vs topic (post run clarity)
+
+Topics very abstractly represent context. Context is more complicated and not
+the focus of the algorithms I'm try to implement. I'm gonna keep it simple with
+topics for benchmarks and then rexplore the idea when I get to implementing
+it as a real system (so soon... but not right now)
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+3/23/2020 - Killington, VT - ROS2
+
+I'm choosing to demo ros2 instead of ros1 because:
+1. ros2 runs python3
+2. ros2 signifies the direction that the community wants to take
+3. New projects will likely look into ros2 over ros because of the two reasons
+    above
+
+Playing devils advocate, ros1 is likely more well documented and it may be
+easier to find community support for it... with that said, the task requested
+of people is not so hard that they'll need to do a lot of searching outside
+of the ros2 documentation
+--------------------------------------------------------------------------------
+
+

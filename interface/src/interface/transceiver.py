@@ -4,9 +4,12 @@
 from abc import ABC, abstractmethod
 import asyncio
 import math
+import time
+
+from interface.loggable import Loggable
 
 
-class Transceiver(ABC):
+class Transceiver(Loggable, ABC):
     """
     Layer below the network that transmits and receives messages from anonymous
     connections. Is a tool used by the main components: Publisher, Router and
@@ -15,23 +18,17 @@ class Transceiver(ABC):
     Attributes:
         callbacks(list): list of coroutine callbacks
     """
-    class Callback(ABC):
-        async def relevant(self, context):
-            return True
-        async def invoke(self, trx, data, context): 
-            # check context is relevant
-            if await self.relevant(context):
-                await self.on_recv(trx, data, context)
-        @abstractmethod
-        async def on_recv(self, trx, data, context):
-            raise NotImplementedError
 
     def __init__(self):
         # callbacks have arguments (transceiver, data) in that order
-        self.callbacks = []  # list of callbacks that get invoked on recv
+        super().__init__()
+        self.callbacks = []  # list of callbacks
+
+    def __str__(self):
+        return f"{id(self)}"
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({id(self)})"
+        return str(self)
 
     @property
     def max_msg_size(self):
@@ -46,7 +43,7 @@ class Transceiver(ABC):
         """
         Number from 0 to 1 that indicates the "range" of the transmission.
         """
-        raise NotImplementedError
+        return 1
 
     @transmit_strength.setter
     def transmit_strength(self, val):
@@ -57,7 +54,7 @@ class Transceiver(ABC):
         """
         Number from 0 to 1 that indicates the "range" of receiving information.
         """
-        raise NotImplementedError
+        return 1
 
     @receive_strength.setter
     def receive_strength(self, val):
@@ -68,37 +65,35 @@ class Transceiver(ABC):
         """
         Current time check by the transceiver
         """
-        raise NotImplementedError
+        return time.process_time()
 
     @abstractmethod
-    async def transmit(self, data, context):
+    async def transmit(self, data):
         """
         Bytes of data to send to all other reachable transceivers in the 
         network. This call is non-blocking. Must be implemented by subclasses.
 
         Args:
             data: information being transmitted to all other transceivers
-            context: circumstances of data transmission
 
         Raises:
             BufferError: when message cannot be sent or buffered
         """
         raise NotImplementedError
 
-    async def receive(self, data, context):
+    async def receive(self, data):
         """
         Invoked by child class to deliver messages received to transceiver. Acts 
         as the original event driver
 
         Args:
             data: information being received
-            context: circumstances of data transmission
         """
         # gather callbacks and run them
-        invocations = (cb.invoke(self, data, context) for cb in self.callbacks)
+        invocations = (cb(self, data) for cb in self.callbacks)
         await asyncio.gather(*invocations)
 
-    def subscribe(self, cb: Callback):
+    def subscribe(self, cb):
         """
         Subscribes a callback that receives messages that the transceiver
         receives

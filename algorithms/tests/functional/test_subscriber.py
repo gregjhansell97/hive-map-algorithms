@@ -17,7 +17,7 @@ def test_initialization(algorithm):
     """
     Publisher, Subscriber, Router = algorithm
     cb = get_callback()
-    s = Subscriber(10, cb)
+    s = Subscriber(uid="id", topic=10, callback=cb)
 
 
 def test_use_local_transceiver(algorithm):
@@ -27,7 +27,7 @@ def test_use_local_transceiver(algorithm):
     Publisher, Subscriber, Router = algorithm
     cb = get_callback()
     # set up publisher
-    s = Subscriber(10, cb)
+    s = Subscriber(uid="id", topic=10, callback=cb)
     t = LocalTransceiver()
     s.use(t)
 
@@ -39,7 +39,7 @@ def test_use_multiple_Local_transceivers(algorithm):
     Publisher, Subscriber, Router = algorithm
     # set up publisher
     cb = get_callback()
-    s = Subscriber(5, cb)
+    s = Subscriber(uid="id", topic=5, callback=cb)
     ts = [LocalTransceiver() for _ in range(10)]
     for t in ts:
         s.use(t)

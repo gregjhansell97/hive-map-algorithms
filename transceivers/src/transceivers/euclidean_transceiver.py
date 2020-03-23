@@ -11,8 +11,13 @@ class EuclideanTransceiver(LocalTransceiver):
     """
 
     def __init__(
-            self, pos=(0, 0), tr_range=math.inf, recv_range=math.inf):
-        super().__init__()
+            self, 
+            *args, 
+            pos=(0, 0), 
+            tr_range=math.inf, 
+            recv_range=math.inf,
+            **kwargs):
+        super().__init__(*args, **kwargs)
         self.pos = pos
         self.tr_range = tr_range
         self.recv_range = recv_range
@@ -50,7 +55,7 @@ class EuclideanTransceiver(LocalTransceiver):
         return distance < self.tr_range + t.recv_range
 
 
-    async def transmit(self, data, context=None):
+    async def transmit(self, data):
         """
         Gather receive method of all connections on every channel
 
@@ -60,7 +65,7 @@ class EuclideanTransceiver(LocalTransceiver):
         # flattens connections
         connections = sum(self.channels, [])
         coros = (
-                t.receive(data, context) 
+                t.receive(data) 
                 for t in connections if self.in_comm_range(t)
         )
         await asyncio.gather(*coros)

@@ -4,11 +4,9 @@
 Implements subscriber interface for network flooding algorithm
 """
 
-import uuid
+import asyncio
 
 import interface
-from interface import Transceiver
-
 
 class Subscriber(interface.Subscriber):
     """
@@ -19,22 +17,25 @@ class Subscriber(interface.Subscriber):
             a message is stale
     """
 
-    def __init__(self, topic: int, cb, *args, **kwargs):
-        super().__init__(uuid.uuid4().bytes, topic, cb, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.clocks = {}
 
-    async def on_recv(self, trx: Transceiver, msg, context):
+    async def on_recv(self, trx, msg):
         header, data = msg
-        clock_id, clock, topic = header
+        uid, clock, topic = header
         # not the right topic, subscriber doesn't care about it 
         if self.topic != topic:
+            await self.log(("rejected", topic, data))
             return
         # check for stale messages
-        if clock_id in self.clocks:
-            if clock <= self.clocks[clock_id]:
+        if uid in self.clocks:
+            if clock <= self.clocks[uid]:
+                await self.log(("rejected", topic, data))
                 return
         # update clock to most recent
-        self.clocks[clock_id] = clock
+        self.clocks[uid] = clock
         # invoke callback
-
-        await self.callback(data)
+        await asyncio.gather(
+                self.log(("accepted", topic, data)), 
+                self.callback(data))
